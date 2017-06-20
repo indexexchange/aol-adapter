@@ -8,7 +8,11 @@ function OpenRtb() {
      * @memberof OpenRtb
      */
     function BidResponse(bidResponse) {
-        __bidResponse = bidResponse;
+        if (!(this instanceof BidResponse)) {
+            return new BidResponse(bidResponse);
+        }
+
+        this.__bidResponse = bidResponse;
     }
 
     /* =====================================
@@ -78,11 +82,11 @@ function OpenRtb() {
         var innerBids;
         var seatbid;
 
-        if (!__bidResponse.hasOwnProperty('seatbid')) {
+        if (!this.__bidResponse.hasOwnProperty('seatbid')) {
             return bids;
         }
 
-        seatbid = __bidResponse.seatbid;
+        seatbid = this.__bidResponse.seatbid;
         for (var i = 0; i < seatbid.length; i++) {
             if (!seatbid[i].hasOwnProperty('bid')) {
                 continue;
@@ -90,7 +94,7 @@ function OpenRtb() {
 
             innerBids = seatbid[i].bid;
             for (var j = 0; j < innerBids.length; j++) {
-                __parseBid(innerBids[j], bids);
+                this.__parseBid(innerBids[j], bids);
             }
         }
 

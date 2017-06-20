@@ -64,317 +64,232 @@ describe('parseResponse', function () {
     var libraryStubData = require('./support/libraryStubData.js');
     var partnerModule = proxyquire('../aol-htb.js', libraryStubData);
     var partnerConfig = require('./support/mockPartnerConfig.json');
+    var responseData = require('./support/mockResponseData.json');
     var expect = require('chai').expect;
     /* -------------------------------------------------------------------- */
 
     /* Instatiate your partner module */
     var partnerModule = partnerModule(partnerConfig);
-    var partnerProfile = partnerModule.profile;
-
-    /* Generate dummy return parcels based on MRA partner profile */
-    var returnParcels;
+    var partnerProfile = partnerModule.__profile;
+    var result, expectedValue, mockData, returnParcels;
 
     describe('should correctly parse bids:', function () {
-        var returnParcels1 = generateReturnParcels(partnerModule.profile, partnerConfig);
 
-        /* ---------- MODIFY THIS TO MATCH YOUR AD RESPONSE FORMAT ---------------*/
-        /* This is your mock response data.
-         * Should contain a bid for every parcel in the returnParcels array.
-         *
-         *  For example:
-         * [{
-         *     "placementId": "54321",
-         *     "sizes": [
-         *         [300, 250]
-         *     ],
-         *     "pass": false,
-         *     "price": 2,
-         *     "adm": "<img src=''/>"
-         * },
-         * {
-         *     "placementId": "12345",
-         *     "sizes": [
-         *         [300, 600]
-         *     ],
-         *     "pass": false,
-         *     "price": 3,
-         *     "adm": "<img src=''/>"
-         * }]
-         *
-         *
-         * The response should contain the response for all of the parcels in the array.
-         * For SRA, this could be mulitple items, for MRA it will always be a single item.
-         */
-
-        var adResponseMock1 = []
-        /* ------------------------------------------------------------------------*/
-
-        /* IF SRA, parse all parcels at once */
-        if (partnerProfile.architecture) partnerModule.parseResponse(1, adResponseMock1, returnParcels1);
-
-        /* Simple type checking on the returned objects, should always pass */
+        /* Simple type checking on the returned objects */
         it('each parcel should have the required fields set', function () {
-            for (var i = 0; i < returnParcels1.length; i++) {
+            returnParcels = generateReturnParcels(partnerModule.__profile, partnerConfig.na);
+
+            /* Get mock response data from our responseData file */
+            mockData = responseData.bid;
+
+            /* IF SRA, parse all parcels at once */
+            if (partnerProfile.architecture) partnerModule.__parseResponse(1, mockData, returnParcels);
+
+            for (var i = 0; i < returnParcels.length; i++) {
 
                 /* IF MRA, parse one parcel at a time */
-                if (!partnerProfile.architecture) partnerModule.parseResponse(1, adResponseMock1, [returnParcels1[i]]);
+                if (!partnerProfile.architecture) partnerModule.__parseResponse(1, mockData[i], [returnParcels[i]]);
 
-                var result = inspector.validate({
+                /* Validate the returnParcel objects after they've been parsed */
+                result = inspector.validate({
                     type: 'object',
                     properties: {
                         targetingType: {
                             type: 'string',
-                            eq: 'slot'
+                            eq: 'slot',
+                            error: 'targetingType field must be set to "slot".'
                         },
                         targeting: {
                             type: 'object',
                             properties: {
-                                [partnerModule.profile.targetingKeys.id]: {
+                                [partnerModule.__profile.targetingKeys.id]: {
                                     type: 'array',
                                     exactLength: 1,
                                     items: {
                                         type: 'string',
                                         minLength: 1
-                                    }
+                                    },
+                                    error: 'id targetingKey field must be correctly set.'
                                 },
-                                [partnerModule.profile.targetingKeys.om]: {
+                                [partnerModule.__profile.targetingKeys.om]: {
                                     type: 'array',
                                     exactLength: 1,
-                                    items: {
-                                        type: 'string',
-                                        minLength: 1
+                                    exec: function (schema, post) {
+                                        var expectedValue = mockData[i].seatbid[0].bid[0].w + 'x' +
+                                            mockData[i].seatbid[0].bid[0].h + '_' +
+                                            mockData[i].seatbid[0].bid[0].price;
+
+                                        if (post[0] !== expectedValue) {
+                                            this.report('om targetingKey value: ' + post[0] + ' is incorrect!');
+                                        }
                                     }
                                 },
                                 pubKitAdId: {
                                     type: 'string',
-                                    minLength: 1
+                                    minLength: 1,
+                                    error: 'pubKitAdId targetingKey field must be correctly set.'
                                 }
                             }
                         },
                         price: {
-                            type: 'number'
+                            type: 'number',
+                            eq: Number(mockData[i].seatbid[0].bid[0].price),
+                            error: 'price field must be correctly set.'
                         },
                         size: {
                             type: 'array',
+                            exactLength: 2,
+                            exec: function (shema, post) {
+                                var expectedValue = [mockData[i].seatbid[0].bid[0].w, mockData[i].seatbid[0].bid[0].h];
+                                if (post[0] !== expectedValue[0] || post[1] !== expectedValue[1]) {
+                                    this.report('the size value: ' + post + ' is incorrect!');
+                                }
+                            }
                         },
                         adm: {
                             type: 'string',
-                            minLength: 1
+                            minLength: 1,
+                            eq: mockData[i].seatbid[0].bid[0].adm,
+                            error: 'adm field must be correctly set.'
                         }
                     }
-                }, returnParcels1[i]);
+                }, returnParcels[i]);
 
                 expect(result.valid, result.format()).to.be.true;
             }
         });
-
-        /* ---------- ADD MORE TEST CASES TO TEST AGAINST REAL VALUES ------------*/
-        it('each parcel should have the correct values set', function () {
-            for (var i = 0; i < returnParcels1.length; i++) {
-
-                /* Add test cases to test against each of the parcel's set fields
-                 * to make sure the response was parsed correctly.
-                 *
-                 * The parcels have already been parsed and should contain all the
-                 * necessary demand.
-                 */
-
-                expect(returnParcels1[i]).to.exist;
-            }
-        });
-        /* -----------------------------------------------------------------------*/
     });
 
     describe('should correctly parse passes: ', function () {
-        var returnParcels2 = generateReturnParcels(partnerModule.profile, partnerConfig);
-
-        /* ---------- MODIFY THIS TO MATCH YOUR AD RESPONSE FORMAT ---------------*/
-        /* This is your mock response data.
-         * Should contain an explicit pass in the response and set the pass field
-         * for each of the return parcels.
-         *
-         *  For example:
-         * [{
-         *     "placementId": "54321",
-         *     "sizes": [
-         *         [300, 250]
-         *     ],
-         *     "pass": true,
-         * },
-         * {
-         *     "placementId": "12345",
-         *     "sizes": [
-         *         [300, 600]
-         *     ],
-         *     "pass": true
-         * }]
-         *
-         * The response should contain the response for all of the parcels in the array.
-         * For SRA, this could be mulitple items, for MRA it will always be a single item.
-         */
-
-        var adResponseMock2 = [];
-        /* ------------------------------------------------------------------------*/
-
-        /* IF SRA, parse all parcels at once */
-        if (partnerProfile.architecture) partnerModule.parseResponse(1, adResponseMock2, returnParcels2);
 
         it('each parcel should have the required fields set', function () {
-            for (var i = 0; i < returnParcels2.length; i++) {
+            returnParcels = generateReturnParcels(partnerModule.__profile, partnerConfig.na);
+
+            /* Get mock response data from our responseData file */
+            mockData = responseData.pass;
+
+            /* IF SRA, parse all parcels at once */
+            if (partnerProfile.architecture) partnerModule.__parseResponse(1, mockData, returnParcels);
+
+            for (var i = 0; i < returnParcels.length; i++) {
 
                 /* IF MRA, parse one parcel at a time */
-                if (!partnerProfile.architecture) partnerModule.parseResponse(1, adResponseMock2, [returnParcels2[i]]);
+                if (!partnerProfile.architecture) partnerModule.__parseResponse(1, mockData[i], [returnParcels[i]]);
 
-                var result = inspector.validate({
+                /* Validate the returnParcel objects after they've been parsed */
+                result = inspector.validate({
                     type: 'object',
                     properties: {
                         pass: {
                             type: 'boolean',
                             eq: true,
-
+                            error: 'pass field must be correctly set.'
                         }
                     }
-                }, returnParcels2[i]);
+                }, returnParcels[i]);
 
                 expect(result.valid, result.format()).to.be.true;
             }
         });
-
-        /* ---------- ADD MORE TEST CASES TO TEST AGAINST REAL VALUES ------------*/
-        it('each parcel should have the correct values set', function () {
-            for (var i = 0; i < returnParcels2.length; i++) {
-
-                /* Add test cases to test against each of the parcel's set fields
-                 * to make sure the response was parsed correctly.
-                 *
-                 * The parcels have already been parsed and should contain all the
-                 * necessary demand.
-                 */
-
-                expect(returnParcels2[i]).to.exist;
-            }
-        });
-        /* -----------------------------------------------------------------------*/
     });
 
     describe('should correctly parse deals: ', function () {
-        var returnParcels3 = generateReturnParcels(partnerModule.profile, partnerConfig);
-
-        /* ---------- MODIFY THIS TO MATCH YOUR AD RESPONSE FORMAT ---------------*/
-        /* This is your mock response data.
-         * Should contain an explicit deal id in the response and set the deal targeting key field
-         * for each of the return parcels.
-         *
-         *  For example:
-         * [{
-         *     "placementId": "54321",
-         *     "sizes": [
-         *         [300, 250]
-         *     ],
-         *     "pass": false,
-         *     "price": 2,
-         *     "adm": "<img src=''/>",
-         *     "dealId": 'megaDeal'
-         * },
-         * {
-         *     "placementId": "12345",
-         *     "sizes": [
-         *         [300, 600]
-         *     ],
-         *     "pass": false,
-         *     "price": 3,
-         *     "adm": "<img src=''/>",
-         *     "dealId": 'megaDeal'
-         * }]
-         *
-         * The response should contain the response for all of the parcels in the array.
-         * For SRA, this could be mulitple items, for MRA it will always be a single item.
-         */
-
-        var adResponseMock3 = [];
-        /* ------------------------------------------------------------------------*/
-
-        /* IF SRA, parse all parcels at once */
-        if (partnerProfile.architecture) partnerModule.parseResponse(1, adResponseMock3, returnParcels3);
 
         /* Simple type checking on the returned objects, should always pass */
         it('each parcel should have the required fields set', function () {
-            for (var i = 0; i < returnParcels3.length; i++) {
+            returnParcels = generateReturnParcels(partnerModule.__profile, partnerConfig.na);
+
+            /* Get mock response data from our responseData file */
+            mockData = responseData.deals;
+
+            /* IF SRA, parse all parcels at once */
+            if (partnerProfile.architecture) partnerModule.__parseResponse(1, mockData, returnParcels);
+
+            for (var i = 0; i < returnParcels.length; i++) {
 
                 /* IF MRA, parse one parcel at a time */
-                if (!partnerProfile.architecture) partnerModule.parseResponse(1, adResponseMock3, [returnParcels3[i]]);
+                if (!partnerProfile.architecture) partnerModule.__parseResponse(1, mockData[i], [returnParcels[i]]);
 
-                var result = inspector.validate({
+                /* Validate the returnParcel objects after they've been parsed */
+                result = inspector.validate({
                     type: 'object',
                     properties: {
                         targetingType: {
                             type: 'string',
-                            eq: 'slot'
+                            eq: 'slot',
+                            error: 'targetingType field must be set to "slot".'
                         },
                         targeting: {
                             type: 'object',
                             properties: {
-                                [partnerModule.profile.targetingKeys.id]: {
+                                [partnerModule.__profile.targetingKeys.id]: {
                                     type: 'array',
                                     exactLength: 1,
                                     items: {
                                         type: 'string',
                                         minLength: 1
+                                    },
+                                    error: 'id targetingKey field must be correctly set.'
+                                },
+                                [partnerModule.__profile.targetingKeys.pm]: {
+                                    type: 'array',
+                                    exactLength: 1,
+                                    exec: function (schema, post) {
+                                        var expectedValue = mockData[i].seatbid[0].bid[0].w + 'x' +
+                                            mockData[i].seatbid[0].bid[0].h + '_' +
+                                            mockData[i].seatbid[0].bid[0].dealid;
+
+                                        if (post[0] !== expectedValue) {
+                                            this.report('om targetingKey value: ' + post[0] + ' is incorrect! Expected: ' + expectedValue);
+                                        }
                                     }
                                 },
-                                [partnerModule.profile.targetingKeys.om]: {
+                                [partnerModule.__profile.targetingKeys.om]: {
                                     type: 'array',
                                     exactLength: 1,
-                                    items: {
-                                        type: 'string',
-                                        minLength: 1
-                                    }
-                                },
-                                [partnerModule.profile.targetingKeys.pm]: {
-                                    type: 'array',
-                                    exactLength: 1,
-                                    items: {
-                                        type: 'string',
-                                        minLength: 1
+                                    exec: function (schema, post) {
+                                        var expectedValue = mockData[i].seatbid[0].bid[0].w + 'x' +
+                                            mockData[i].seatbid[0].bid[0].h + '_' +
+                                            mockData[i].seatbid[0].bid[0].price;
+
+                                        if (post[0] !== expectedValue) {
+                                            this.report('om targetingKey value: ' + post[0] + ' is incorrect!');
+                                        }
                                     }
                                 },
                                 pubKitAdId: {
                                     type: 'string',
-                                    minLength: 1
+                                    minLength: 1,
+                                    error: 'pubKitAdId targetingKey field must be correctly set.'
                                 }
                             }
                         },
                         price: {
-                            type: 'number'
+                            type: 'number',
+                            eq: Number(mockData[i].seatbid[0].bid[0].price),
+                            error: 'price field must be correctly set.'
                         },
                         size: {
                             type: 'array',
+                            exactLength: 2,
+                            exec: function (shema, post) {
+                                var expectedValue = [mockData[i].seatbid[0].bid[0].w, mockData[i].seatbid[0].bid[0].h];
+                                if (post[0] !== expectedValue[0] || post[1] !== expectedValue[1]) {
+                                    this.report('the size value: ' + post + ' is incorrect!');
+                                }
+                            }
                         },
                         adm: {
                             type: 'string',
-                            minLength: 1
-                        },
+                            minLength: 1,
+                            eq: mockData[i].seatbid[0].bid[0].adm,
+                            error: 'adm field must be correctly set.'
+                        }
                     }
-                }, returnParcels3[i]);
+                }, returnParcels[i]);
 
                 expect(result.valid, result.format()).to.be.true;
             }
         });
-
-        /* ---------- ADD MORE TEST CASES TO TEST AGAINST REAL VALUES ------------*/
-        it('each parcel should have the correct values set', function () {
-            for (var i = 0; i < returnParcels3.length; i++) {
-
-                /* Add test cases to test against each of the parcel's set fields
-                 * to make sure the response was parsed correctly.
-                 *
-                 * The parcels have already been parsed and should contain all the
-                 * necessary demand.
-                 */
-
-                expect(returnParcels3[i]).to.exist;
-            }
-        });
-        /* -----------------------------------------------------------------------*/
     });
 });

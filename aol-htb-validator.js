@@ -1,5 +1,5 @@
 /**
- * @author:    Partner
+ * @author:    Index Exchange <adapter-certification-eng@indexexchange.com>
  * @license:   UNLICENSED
  *
  * @copyright: Copyright (c) 2017 by Index Exchange. All rights reserved.
@@ -8,15 +8,6 @@
  * and or a trade secret. No part of this document may be reproduced or
  * distributed in any form or by any means, in whole or in part, without the
  * prior written permission of Index Exchange.
- */
-
-
-/**
- * This file contains the necessary validation for the partner configuration.
- * This validation will be performed on the partner specific configuration object
- * that is passed into the wrapper. The wrapper uses an outside library called
- * schema-insepctor to perform the validation. Information about it can be found here:
- * https://atinux.fr/schema-inspector/.
  */
 
 'use strict';
@@ -32,19 +23,45 @@ var Inspector = require('../../../libs/external/schema-inspector.js');
 ////////////////////////////////////////////////////////////////////////////////
 
 var partnerValidator = function (configs) {
+    var validRegions = {
+        eu: 0,
+        na: 1,
+        asia: 2
+    };
+
     var result = Inspector.validate({
         type: 'object',
         properties: {
+            region: {
+                type: 'string',
+                exec: function (schema, post) {
+                    if (!validRegions.hasOwnProperty(post)) {
+                        this.report('region must be one of the predefined values: ' + Object.keys(validRegions));
+                    }
+                }
+            },
+            networkId: {
+                type: 'string',
+                minLength: 1
+            },
             xSlots: {
                 type: 'object',
                 properties: {
                     '*': {
                         type: 'object',
-                        properties: {
-                            placementId: {
-                                type: 'string',
-                                minLength: 1
-                            }
+                        placementId: {
+                            type: ['string'],
+                            minLength: 1
+                        },
+                        sizeId: {
+                            optional: true,
+                            type: ['string'],
+                            minLength: 1
+                        },
+                        pageId: {
+                            optional: true,
+                            type: ['string'],
+                            minLength: 1
                         }
                     }
                 }

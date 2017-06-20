@@ -36,7 +36,7 @@ describe('Partner Profile', function () {
 
     /* Instatiate your partner module */
     var partnerModule = partnerModule(partnerConfig);
-    var partnerProfile = partnerModule.profile;
+    var partnerProfile = partnerModule.__profile;
 
     /* partner module profile tests */
     var profile = partnerProfile;
@@ -113,8 +113,8 @@ describe('Partner Profile', function () {
 
                                 if (targetingSplit[0] !== 'ix' ||
                                     targetingSplit[1] !== profile.statsId.toLowerCase() ||
-                                    targetingSplit[2] !== 'cpm') {
-                                    this.report('om tageting key should be of the format ix_{statsId}_cpm')
+                                    targetingSplit[2] !== 'om') {
+                                    this.report('om tageting key should be of the format ix_{statsId}_om')
                                 }
                             }
                         },
@@ -125,20 +125,8 @@ describe('Partner Profile', function () {
 
                                 if (targetingSplit[0] !== 'ix' ||
                                     targetingSplit[1] !== profile.statsId.toLowerCase() ||
-                                    targetingSplit[2] !== 'cpm') {
-                                    this.report('pm tageting key should be of the format ix_{statsId}_cpm')
-                                }
-                            }
-                        },
-                        pmid: {
-                            type: 'string',
-                            exec: function (schema, post) {
-                                var targetingSplit = post.split('_');
-
-                                if (targetingSplit[0] !== 'ix' ||
-                                    targetingSplit[1] !== profile.statsId.toLowerCase() ||
-                                    targetingSplit[2] !== 'dealid') {
-                                    this.report('pmid tageting key should be of the format ix_{statsId}_dealid')
+                                    targetingSplit[2] !== 'pm') {
+                                    this.report('pm tageting key should be of the format ix_{statsId}_pm')
                                 }
                             }
                         }

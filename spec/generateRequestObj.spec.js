@@ -63,72 +63,32 @@ describe('generateRequestObj', function () {
     var proxyquire = require('proxyquire').noCallThru();
     var libraryStubData = require('./support/libraryStubData.js');
     var partnerModule = proxyquire('../aol-htb.js', libraryStubData);
-    var partnerConfig = require('./support/mockPartnerConfig.json');
+    var partnerConfigs = require('./support/mockPartnerConfig.json');
     var expect = require('chai').expect;
     /* -------------------------------------------------------------------- */
 
-    /* Instatiate your partner module */
-    var partnerModule = partnerModule(partnerConfig);
-    var partnerProfile = partnerModule.profile;
+    /* Partner instances */
+    var partnerInstance;
+    var partnerProfile;
 
     /* Generate dummy return parcels based on MRA partner profile */
     var returnParcels;
     var requestObject;
 
-    /* Generate a request object using generated mock return parcels. */
-    returnParcels = generateReturnParcels(partnerProfile, partnerConfig);
+    describe('should return a correctly formated object', function () {
 
-    /* -------- IF SRA, generate a single request for all the parcels -------- */
-    if (partnerProfile.architecture) {
-        requestObject = partnerModule.generateRequestObj(returnParcels);
+        /* Instatiate your partner module */
+        partnerInstance = partnerModule(partnerConfigs.na);
+        partnerProfile = partnerInstance.__profile;
 
-        /* Simple type checking, should always pass */
-        it('SRA - should return a correctly formatted object', function () {
-            var result = inspector.validate({
-                type: 'object',
-                strict: true,
-                properties: {
-                    url: {
-                        type: 'string',
-                        minLength: 1
-                    },
-                    data: {
-                        type: 'object'
-                    },
-                    callbackId: {
-                        type: 'string',
-                        minLength: 1
-                    }
-                }
-            }, requestObject);
+        /* Generate a request object using generated mock return parcels. */
+        returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
 
-            expect(result.valid).to.be.true;
-        });
-
-        /* Test that the generateRequestObj function creates the correct object by building a URL
-            * from the results. This is the bid request url that wrapper will send out to get demand
-            * for your module.
-            *
-            * The url should contain all the necessary parameters for all of the request parcels
-            * passed into the function.
-            */
-
-        /* ---------- ADD MORE TEST CASES TO TEST AGAINST REAL VALUES ------------*/
-        it('should correctly build a url', function () {
-            /* Write unit tests to verify that your bid request url contains the correct
-                * request params, url, etc.
-                */
-            expect(requestObject).to.exist;
-        });
-        /* -----------------------------------------------------------------------*/
-
-    /* ---------- IF MRA, generate a single request for all the parcels ---------- */
-    } else {
         for (var i = 0; i < returnParcels.length; i++) {
-            requestObject = partnerModule.generateRequestObj([returnParcels[i]]);
+            requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
 
             /* Simple type checking, should always pass */
-            it('MRA - should return a correctly formatted object', function () {
+            it('should contain the correct properties', function () {
                 var result = inspector.validate({
                     type: 'object',
                     strict: true,
@@ -136,9 +96,6 @@ describe('generateRequestObj', function () {
                         url: {
                             type: 'string',
                             minLength: 1
-                        },
-                        data: {
-                            type: 'object'
                         },
                         callbackId: {
                             type: 'string',
@@ -149,24 +106,177 @@ describe('generateRequestObj', function () {
 
                 expect(result.valid).to.be.true;
             });
-
-            /* Test that the generateRequestObj function creates the correct object by building a URL
-                * from the results. This is the bid request url that wrapper will send out to get demand
-                * for your module.
-                *
-                * The url should contain all the necessary parameters for all of the request parcels
-                * passed into the function.
-                */
-
-            /* ---------- ADD MORE TEST CASES TO TEST AGAINST REAL VALUES ------------*/
-            it('should correctly build a url', function () {
-                /* Write unit tests to verify that your bid request url contains the correct
-                    * request params, url, etc.
-                    */
-                expect(requestObject).to.exist;
-            });
-            /* -----------------------------------------------------------------------*/
         }
-    }
+    });
 
+    /* Test that the generateRequestObj function creates the correct object by building a URL
+     * from the results. This is the bid request url that wrapper will send out to get demand
+     * for your module.
+     *
+     * The url should contain all the necessary parameters for all of the request parcels
+     * passed into the function.
+     */
+
+    describe('should correctly build the endpoint url', function () {
+        var url, i, match;
+
+        it('should correctly set NA url', function () {
+            /* Instatiate your partner module */
+            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerProfile = partnerInstance.__profile;
+
+            /* Generate a request object using generated mock return parcels. */
+            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+
+            for (i = 0; i < returnParcels.length; i++) {
+                requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
+                url = requestObject.url;
+                expect(url.match("adserver-us.adtech.advertising.com", "url is incorrect").length).to.equal(1);
+            }
+        })
+
+        it('should correctly set EU url', function () {
+            /* Instatiate your partner module */
+            partnerInstance = partnerModule(partnerConfigs.eu);
+            partnerProfile = partnerInstance.__profile;
+
+            /* Generate a request object using generated mock return parcels. */
+            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.eu);
+
+            for (i = 0; i < returnParcels.length; i++) {
+                requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
+                url = requestObject.url;
+                expect(url.match("adserver-eu.adtech.advertising.com", "url is incorrect").length).to.equal(1);
+            }
+        })
+
+        it('should correctly set ASIA url', function () {
+            /* Instatiate your partner module */
+            partnerInstance = partnerModule(partnerConfigs.asia);
+            partnerProfile = partnerInstance.__profile;
+
+            /* Generate a request object using generated mock return parcels. */
+            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.asia);
+
+            for (i = 0; i < returnParcels.length; i++) {
+                requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
+                url = requestObject.url;
+                expect(url.match("adserver-as.adtech.advertising.com").length, "url is incorrect").to.equal(1);
+            }
+        })
+
+        it('should correctly set CMD request paramater', function () {
+            /* Instatiate your partner module */
+            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerProfile = partnerInstance.__profile;
+
+            /* Generate a request object using generated mock return parcels. */
+            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+
+            for (i = 0; i < returnParcels.length; i++) {
+                requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
+                url = requestObject.url;
+                match = url.match(/;cmd=(.*?);/);
+                expect(match[1], "cmd is incorrect or not present").to.equal('bid');
+            }
+        })
+
+        it('should correctly set CORS request paramater', function () {
+            /* Instatiate your partner module */
+            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerProfile = partnerInstance.__profile;
+
+            /* Generate a request object using generated mock return parcels. */
+            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+
+            for (i = 0; i < returnParcels.length; i++) {
+                requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
+                url = requestObject.url;
+                match = url.match(/;cors=(.*?);/);
+                expect(match[1], "CORS is incorrect or not present").to.equal('yes');
+            }
+        })
+
+        it('should correctly set V request paramater', function () {
+            /* Instatiate your partner module */
+            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerProfile = partnerInstance.__profile;
+
+            /* Generate a request object using generated mock return parcels. */
+            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+
+            for (i = 0; i < returnParcels.length; i++) {
+                requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
+                url = requestObject.url;
+                match = url.match(/;v=(.*?);/);
+                expect(match[1], "V is incorrect or not present").to.equal('2');
+            }
+        })
+
+        it('should correctly set MISC request paramater', function () {
+            /* Instatiate your partner module */
+            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerProfile = partnerInstance.__profile;
+
+            /* Generate a request object using generated mock return parcels. */
+            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+
+            for (i = 0; i < returnParcels.length; i++) {
+                requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
+                url = requestObject.url;
+                match = url.match(/;misc=(.*?);/);
+                expect(match[1], "V is incorrect or not present").to.be.not.null;
+            }
+        })
+
+        it('should correctly set unique callback request parameter for each request', function () {
+            /* Instatiate your partner module */
+            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerProfile = partnerInstance.__profile;
+
+            /* Generate a request object using generated mock return parcels. */
+            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+
+            for (i = 0; i < returnParcels.length; i++) {
+                requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
+                url = requestObject.url;
+                match = url.match(/;callback=(.*?);/);
+                expect(match[1], "callback function is incorrect").to.equal('window.headertag.' + partnerProfile.namespace + '.adResponseCallbacks.' + requestObject.callbackId);
+            }
+        })
+
+        it('should correctly set networkId', function () {
+            /* Instatiate your partner module */
+            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerProfile = partnerInstance.__profile;
+
+            /* Generate a request object using generated mock return parcels. */
+            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+
+            for (i = 0; i < returnParcels.length; i++) {
+                requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
+                url = requestObject.url;
+                expect(url.match("9959.1").length, "networkId is incorrect").to.equal(1);
+            }
+        })
+
+        it('should correctly set placementId request parameter for each request/slot', function () {
+            /* Instatiate your partner module */
+            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerProfile = partnerInstance.__profile;
+
+            /* Generate a request object using generated mock return parcels. */
+            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+
+            for (i = 0; i < returnParcels.length; i++) {
+                requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
+                url = requestObject.url;
+                expect(url.match(returnParcels[i].xSlotRef.placementId).length, "placementId is incorrect").to.equal(1);
+            }
+        })
+
+        /* ---------- ADD MORE TEST CASES TO TEST CASES FOR EVERY NEW CHANGE/FEATURE ------------*/
+
+    });
+    /* -----------------------------------------------------------------------*/
 });
