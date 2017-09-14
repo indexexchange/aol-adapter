@@ -65,11 +65,11 @@
       "get": {
           "timeout": 1000,
           "networkId": "9599.1",
-          "dcn": "2c9d2b50015c5ce9db6aeeed8b9500d6",
-          "pos": "header",
           "xSlots": {
               "1": {
-                  "placementId": "3675027"
+                  "placementId": "3675027",
+                  "dcn": "2c9d2b50015c5ce9db6aeeed8b9500d6",
+                  "pos": "header"
               }
           },
           "mapping": {

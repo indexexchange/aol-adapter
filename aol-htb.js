@@ -68,18 +68,26 @@ function AolHtb(configs) {
     var __profile;
 
     /**
-     * Base url for bid requests.
-     *
-     * @private {object}
-     */
-    var __baseUrl;
-
-    /**
      * Instance of BidTransformer for transforming bids.
      *
      * @private {object}
      */
     var __bidTransformers;
+
+    /**
+     * Endpoints URLS
+     * @type {{eu: string, na: string, asia: string}}
+     */
+    var endpointsUrls = {
+        oneDisplay: {
+            eu: '//adserver-eu.adtech.advertising.com',
+            na: '//adserver-us.adtech.advertising.com',
+            asia: '//adserver-as.adtech.advertising.com'
+        },
+        oneMobile: {
+            get: '//hb.nexage.com'
+        }
+    };
 
     /* =====================================
      * Functions
@@ -96,6 +104,7 @@ function AolHtb(configs) {
      * @return {string}
      */
     function __generateRequestObj(returnParcels) {
+        var baseUrl = Browser.getProtocol() + endpointsUrls.oneDisplay[configs.region] + '/pubapi/3.0/' + configs.networkId;
 
         /* MRA partners receive only one parcel in the array. */
         var returnParcel = returnParcels[0];
@@ -121,7 +130,7 @@ function AolHtb(configs) {
             requestParams.bidFloor = xSlot.bidFloor;
         }
 
-        var url = Network.buildUrl(__baseUrl, [xSlot.placementId, pageId, sizeId, 'ADTECH;']);
+        var url = Network.buildUrl(baseUrl, [xSlot.placementId, pageId, sizeId, 'ADTECH;']);
 
         /* build url paramters */
         for (var parameter in requestParams) {
@@ -349,16 +358,6 @@ function AolHtb(configs) {
         __bidTransformers.price = BidTransformer(bidTransformerConfigs.price);
         //? }
 
-        /* base url by region */
-        var endPointByRegion = {
-            eu: '//adserver-eu.adtech.advertising.com',
-            na: '//adserver-us.adtech.advertising.com',
-            asia: '//adserver-as.adtech.advertising.com'
-        };
-
-        /* build base bid request url */
-        __baseUrl = Browser.getProtocol() + endPointByRegion[configs.region] + '/pubapi/3.0/' + configs.networkId;
-
         __baseClass = Partner(__profile, configs, null, {
             parseResponse: __parseResponse,
             generateRequestObj: __generateRequestObj
@@ -386,7 +385,6 @@ function AolHtb(configs) {
 
         //? if (TEST) {
         __profile: __profile,
-        __baseUrl: __baseUrl,
         //? }
 
         /* Functions
