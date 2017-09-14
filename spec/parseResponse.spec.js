@@ -63,13 +63,13 @@ describe('parseResponse', function () {
     var proxyquire = require('proxyquire').noCallThru();
     var libraryStubData = require('./support/libraryStubData.js');
     var partnerModule = proxyquire('../aol-htb.js', libraryStubData);
-    var partnerConfig = require('./support/mockPartnerConfig.json');
+	var oneDisplayConfigs = require('./support/mockPartnerConfig.json').oneDisplay;
     var responseData = require('./support/mockResponseData.json');
     var expect = require('chai').expect;
     /* -------------------------------------------------------------------- */
 
     /* Instatiate your partner module */
-    var partnerModule = partnerModule(partnerConfig);
+    var partnerModule = partnerModule(oneDisplayConfigs);
     var partnerProfile = partnerModule.__profile;
     var result, expectedValue, mockData, returnParcels;
 
@@ -77,7 +77,7 @@ describe('parseResponse', function () {
 
         /* Simple type checking on the returned objects */
         it('each parcel should have the required fields set', function () {
-            returnParcels = generateReturnParcels(partnerModule.__profile, partnerConfig.na);
+            returnParcels = generateReturnParcels(partnerModule.__profile, oneDisplayConfigs.na);
 
             /* Get mock response data from our responseData file */
             mockData = responseData.bid;
@@ -163,7 +163,7 @@ describe('parseResponse', function () {
     describe('should correctly parse passes: ', function () {
 
         it('each parcel should have the required fields set', function () {
-            returnParcels = generateReturnParcels(partnerModule.__profile, partnerConfig.na);
+            returnParcels = generateReturnParcels(partnerModule.__profile, oneDisplayConfigs.na);
 
             /* Get mock response data from our responseData file */
             mockData = responseData.pass;
@@ -197,7 +197,7 @@ describe('parseResponse', function () {
 
         /* Simple type checking on the returned objects, should always pass */
         it('each parcel should have the required fields set', function () {
-            returnParcels = generateReturnParcels(partnerModule.__profile, partnerConfig.na);
+            returnParcels = generateReturnParcels(partnerModule.__profile, oneDisplayConfigs.na);
 
             /* Get mock response data from our responseData file */
             mockData = responseData.deals;

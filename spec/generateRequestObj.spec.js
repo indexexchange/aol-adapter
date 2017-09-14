@@ -63,7 +63,7 @@ describe('generateRequestObj', function () {
     var proxyquire = require('proxyquire').noCallThru();
     var libraryStubData = require('./support/libraryStubData.js');
     var partnerModule = proxyquire('../aol-htb.js', libraryStubData);
-    var partnerConfigs = require('./support/mockPartnerConfig.json');
+    var oneDisplayConfigs = require('./support/mockPartnerConfig.json').oneDisplay;
     var expect = require('chai').expect;
     /* -------------------------------------------------------------------- */
 
@@ -78,11 +78,11 @@ describe('generateRequestObj', function () {
     describe('should return a correctly formated object', function () {
 
         /* Instatiate your partner module */
-        partnerInstance = partnerModule(partnerConfigs.na);
+        partnerInstance = partnerModule(oneDisplayConfigs.na);
         partnerProfile = partnerInstance.__profile;
 
         /* Generate a request object using generated mock return parcels. */
-        returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+        returnParcels = generateReturnParcels(partnerProfile, oneDisplayConfigs.na);
 
         for (var i = 0; i < returnParcels.length; i++) {
             requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
@@ -117,16 +117,16 @@ describe('generateRequestObj', function () {
      * passed into the function.
      */
 
-    describe('should correctly build the endpoint url', function () {
+    describe('should correctly build onedisplay endpoint url', function () {
         var url, i, match;
 
         it('should correctly set NA url', function () {
             /* Instatiate your partner module */
-            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerInstance = partnerModule(oneDisplayConfigs.na);
             partnerProfile = partnerInstance.__profile;
 
             /* Generate a request object using generated mock return parcels. */
-            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+            returnParcels = generateReturnParcels(partnerProfile, oneDisplayConfigs.na);
 
             for (i = 0; i < returnParcels.length; i++) {
                 requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
@@ -137,11 +137,11 @@ describe('generateRequestObj', function () {
 
         it('should correctly set EU url', function () {
             /* Instatiate your partner module */
-            partnerInstance = partnerModule(partnerConfigs.eu);
+            partnerInstance = partnerModule(oneDisplayConfigs.eu);
             partnerProfile = partnerInstance.__profile;
 
             /* Generate a request object using generated mock return parcels. */
-            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.eu);
+            returnParcels = generateReturnParcels(partnerProfile, oneDisplayConfigs.eu);
 
             for (i = 0; i < returnParcels.length; i++) {
                 requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
@@ -152,11 +152,11 @@ describe('generateRequestObj', function () {
 
         it('should correctly set ASIA url', function () {
             /* Instatiate your partner module */
-            partnerInstance = partnerModule(partnerConfigs.asia);
+            partnerInstance = partnerModule(oneDisplayConfigs.asia);
             partnerProfile = partnerInstance.__profile;
 
             /* Generate a request object using generated mock return parcels. */
-            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.asia);
+            returnParcels = generateReturnParcels(partnerProfile, oneDisplayConfigs.asia);
 
             for (i = 0; i < returnParcels.length; i++) {
                 requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
@@ -167,11 +167,11 @@ describe('generateRequestObj', function () {
 
         it('should correctly set CMD request paramater', function () {
             /* Instatiate your partner module */
-            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerInstance = partnerModule(oneDisplayConfigs.na);
             partnerProfile = partnerInstance.__profile;
 
             /* Generate a request object using generated mock return parcels. */
-            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+            returnParcels = generateReturnParcels(partnerProfile, oneDisplayConfigs.na);
 
             for (i = 0; i < returnParcels.length; i++) {
                 requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
@@ -183,11 +183,11 @@ describe('generateRequestObj', function () {
 
         it('should correctly set CORS request paramater', function () {
             /* Instatiate your partner module */
-            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerInstance = partnerModule(oneDisplayConfigs.na);
             partnerProfile = partnerInstance.__profile;
 
             /* Generate a request object using generated mock return parcels. */
-            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+            returnParcels = generateReturnParcels(partnerProfile, oneDisplayConfigs.na);
 
             for (i = 0; i < returnParcels.length; i++) {
                 requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
@@ -199,11 +199,11 @@ describe('generateRequestObj', function () {
 
         it('should correctly set V request paramater', function () {
             /* Instatiate your partner module */
-            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerInstance = partnerModule(oneDisplayConfigs.na);
             partnerProfile = partnerInstance.__profile;
 
             /* Generate a request object using generated mock return parcels. */
-            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+            returnParcels = generateReturnParcels(partnerProfile, oneDisplayConfigs.na);
 
             for (i = 0; i < returnParcels.length; i++) {
                 requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
@@ -215,11 +215,11 @@ describe('generateRequestObj', function () {
 
         it('should correctly set MISC request paramater', function () {
             /* Instatiate your partner module */
-            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerInstance = partnerModule(oneDisplayConfigs.na);
             partnerProfile = partnerInstance.__profile;
 
             /* Generate a request object using generated mock return parcels. */
-            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+            returnParcels = generateReturnParcels(partnerProfile, oneDisplayConfigs.na);
 
             for (i = 0; i < returnParcels.length; i++) {
                 requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
@@ -231,11 +231,11 @@ describe('generateRequestObj', function () {
 
         it('should correctly set unique callback request parameter for each request', function () {
             /* Instatiate your partner module */
-            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerInstance = partnerModule(oneDisplayConfigs.na);
             partnerProfile = partnerInstance.__profile;
 
             /* Generate a request object using generated mock return parcels. */
-            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+            returnParcels = generateReturnParcels(partnerProfile, oneDisplayConfigs.na);
 
             for (i = 0; i < returnParcels.length; i++) {
                 requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
@@ -247,11 +247,11 @@ describe('generateRequestObj', function () {
 
         it('should correctly set networkId', function () {
             /* Instatiate your partner module */
-            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerInstance = partnerModule(oneDisplayConfigs.na);
             partnerProfile = partnerInstance.__profile;
 
             /* Generate a request object using generated mock return parcels. */
-            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+            returnParcels = generateReturnParcels(partnerProfile, oneDisplayConfigs.na);
 
             for (i = 0; i < returnParcels.length; i++) {
                 requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
@@ -262,11 +262,11 @@ describe('generateRequestObj', function () {
 
         it('should correctly set placementId request parameter for each request/slot', function () {
             /* Instatiate your partner module */
-            partnerInstance = partnerModule(partnerConfigs.na);
+            partnerInstance = partnerModule(oneDisplayConfigs.na);
             partnerProfile = partnerInstance.__profile;
 
             /* Generate a request object using generated mock return parcels. */
-            returnParcels = generateReturnParcels(partnerProfile, partnerConfigs.na);
+            returnParcels = generateReturnParcels(partnerProfile, oneDisplayConfigs.na);
 
             for (i = 0; i < returnParcels.length; i++) {
                 requestObject = partnerInstance.__generateRequestObj([returnParcels[i]]);
