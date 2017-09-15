@@ -104,33 +104,38 @@ function AolHtb(configs) {
      * @return {string}
      */
     function __generateRequestObj(returnParcels) {
-        var baseUrl = Browser.getProtocol() + endpointsUrls.oneDisplay[configs.region] + '/pubapi/3.0/' + configs.networkId;
-
-        /* MRA partners receive only one parcel in the array. */
         var returnParcel = returnParcels[0];
         var xSlot = returnParcel.xSlotRef;
 
-        /* generate a unique request identifier for storing request-specific information */
-        var requestId = '_' + System.generateUniqueId();
-
-        /* sizeid & pageid */
-        var sizeId = xSlot.sizeId || '-1';
-        var pageId = xSlot.pageId || '0';
-
-        /* request params */
-        var requestParams = {
-            cmd: 'bid',
-            cors: 'yes',
-            v: '2',
-            misc: System.now(),
-            callback: 'window.' + SpaceCamp.NAMESPACE + '.' + __profile.namespace + '.adResponseCallbacks.' + requestId
-        };
-
-        if (xSlot.bidFloor) {
-            requestParams.bidFloor = xSlot.bidFloor;
+        if (__isOneMobileRequest(xSlot)) {
+            return __generateOneMobileRequest(xSlot);
         }
 
-        var url = Network.buildUrl(baseUrl, [xSlot.placementId, pageId, sizeId, 'ADTECH;']);
+        return __generateOneDisplayRequest(xSlot);
+    }
+
+	function __generateOneDisplayRequest(xSlot) {
+		var baseUrl = Browser.getProtocol() + endpointsUrls.oneDisplay[configs.region] + '/pubapi/3.0/' + configs.networkId;
+		var requestId = '_' + System.generateUniqueId();
+
+        /* sizeid & pageid */
+		var sizeId = xSlot.sizeId || '-1';
+		var pageId = xSlot.pageId || '0';
+
+        /* request params */
+		var requestParams = {
+			cmd: 'bid',
+			cors: 'yes',
+			v: '2',
+			misc: System.now(),
+			callback: 'window.' + SpaceCamp.NAMESPACE + '.' + __profile.namespace + '.adResponseCallbacks.' + requestId
+		};
+
+		if (xSlot.bidFloor) {
+			requestParams.bidFloor = xSlot.bidFloor;
+		}
+
+		var url = Network.buildUrl(baseUrl, [xSlot.placementId, pageId, sizeId, 'ADTECH;']);
 
         /* build url paramters */
         for (var parameter in requestParams) {
@@ -140,11 +145,44 @@ function AolHtb(configs) {
             url += parameter + '=' + requestParams[parameter] + ';';
         }
 
-        return {
-            url: url,
-            callbackId: requestId
-        };
+		return {
+		    url: url,
+			callbackId: requestId
+		};
     }
+
+	function __generateOneMobileRequest(xSlot) {
+		var baseUrl = Browser.getProtocol() + endpointsUrls.oneMobile;
+		var requestId = '_' + System.generateUniqueId();
+
+		var requestParams = {
+			cmd: 'bid',
+			dcn: xSlot.dcn,
+            pos: xSlot.pos
+		};
+
+		if (xSlot.bidFloor) {
+			requestParams.bidFloor = xSlot.bidFloor;
+		}
+
+		var url = Network.buildUrl(baseUrl, ['bidRequest?']);
+
+		for (var parameter in requestParams) {
+			if (!requestParams.hasOwnProperty(parameter)) {
+				continue;
+			}
+			url += '&' + parameter + '=' + requestParams[parameter];
+		}
+
+		return {
+			url: url,
+			callbackId: requestId
+		};
+	}
+
+	function __isOneMobileRequest(xSlot) {
+        return xSlot.dcn && xSlot.pos;
+	}
 
     /* Helpers
      * ---------------------------------- */
