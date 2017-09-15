@@ -55,7 +55,7 @@ function generateReturnParcels(profile, partnerConfig) {
  * Testing
  * ---------------------------------- */
 
-describe('generateRequestObj', function () {
+describe('generateRequestObj()', function () {
 
     /* Setup and Library Stub
      * ------------------------------------------------------------- */
@@ -64,6 +64,7 @@ describe('generateRequestObj', function () {
     var libraryStubData = require('./support/libraryStubData.js');
     var partnerModule = proxyquire('../aol-htb.js', libraryStubData);
     var oneDisplayConfigs = require('./support/mockPartnerConfig.json').oneDisplay;
+    var oneMobileConfigs = require('./support/mockPartnerConfig.json').oneMobile;
     var expect = require('chai').expect;
     /* -------------------------------------------------------------------- */
 
@@ -86,9 +87,27 @@ describe('generateRequestObj', function () {
 		returnParcels.forEach((item) => {
 		    requestObject = partnerInstance.__generateRequestObj([item]);
 
-		    assert(requestObject);
+		    assert(requestObject, item);
         });
 	}
+
+    function validateRequestObject(requestObject) {
+        return inspector.validate({
+            type: 'object',
+            strict: true,
+            properties: {
+                url: {
+                    type: 'string',
+                    minLength: 1
+                },
+                callbackId: {
+                    type: 'string',
+                    minLength: 1
+                }
+            }
+        }, requestObject);
+    }
+
 
     /* Test that the generateRequestObj function creates the correct object by building a URL
      * from the results. This is the bid request url that wrapper will send out to get demand
@@ -97,25 +116,12 @@ describe('generateRequestObj', function () {
      * The url should contain all the necessary parameters for all of the request parcels
      * passed into the function.
      */
-    describe('should correctly build onedisplay endpoint url', function () {
-        var url, i, match;
+    describe('should correctly build oneDisplay endpoint url',  () => {
+        var url, match;
 
 		it('should return a correctly formated objects', function () {
 			assertRequestsForPartnerConfig(oneDisplayConfigs.na, (requestObject) => {
-				var result = inspector.validate({
-					type: 'object',
-					strict: true,
-					properties: {
-						url: {
-							type: 'string',
-							minLength: 1
-						},
-						callbackId: {
-							type: 'string',
-							minLength: 1
-						}
-					}
-				}, requestObject);
+				var result = validateRequestObject(requestObject);
 
 				expect(result.valid).to.be.true;
 			})
@@ -181,9 +187,46 @@ describe('generateRequestObj', function () {
         });
 
         it('should correctly set placementId request parameter for each request/slot', function () {
-			assertRequestsForPartnerConfig(oneDisplayConfigs.na, ({url}) => {
-				expect(url.match(returnParcels[i].xSlotRef.placementId).length, "placementId is incorrect").to.equal(1);
+			assertRequestsForPartnerConfig(oneDisplayConfigs.na, ({url}, requestStub) => {
+				expect(url.match(requestStub.xSlotRef.placementId).length, "placementId is incorrect").to.equal(1);
 			});
         });
     });
+
+    describe('should correctly build oneMobile endpoint url', () => {
+        it('should return a correctly formated objects', function () {
+            assertRequestsForPartnerConfig(oneDisplayConfigs.na, (requestObject) => {
+                var result = validateRequestObject(requestObject);
+
+                expect(result.valid).to.be.true;
+            })
+        });
+
+        it('should correctly set endpoint url', function () {
+            assertRequestsForPartnerConfig(oneMobileConfigs.get, ({url}) => {
+                expect(url.match('hb.nexage.com', 'url is incorrect').length).to.equal(1);
+            });
+        });
+
+        it('should correctly set CMD request paramater', function () {
+            assertRequestsForPartnerConfig(oneMobileConfigs.get, ({url}) => {
+                var match = url.match(/&cmd=(.*?)(&|$)/);
+                expect(match[1], 'cmd is incorrect or not present').to.equal('bid');
+            });
+        });
+
+        it('should correctly set dcn request paramater', function () {
+            assertRequestsForPartnerConfig(oneMobileConfigs.get, ({url}, requestStub) => {
+                var match = url.match(/&dcn=(.*?)(&|$)/);
+                expect(match[1], 'dcn is incorrect or not present').to.equal(requestStub.xSlotRef.dcn);
+            });
+        });
+
+        it('should correctly set pos request paramater', function () {
+            assertRequestsForPartnerConfig(oneMobileConfigs.get, ({url}, requestStub) => {
+                var match = url.match(/&pos=(.*?)(&|$)/);
+                expect(match[1], 'pos is incorrect or not present').to.equal(requestStub.xSlotRef.pos);
+            });
+        });
+    })
 });

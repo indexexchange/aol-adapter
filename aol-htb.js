@@ -152,7 +152,7 @@ function AolHtb(configs) {
     }
 
 	function __generateOneMobileRequest(xSlot) {
-		var baseUrl = Browser.getProtocol() + endpointsUrls.oneMobile;
+		var baseUrl = Browser.getProtocol() + endpointsUrls.oneMobile.get;
 		var requestId = '_' + System.generateUniqueId();
 
 		var requestParams = {
@@ -160,10 +160,6 @@ function AolHtb(configs) {
 			dcn: xSlot.dcn,
             pos: xSlot.pos
 		};
-
-		if (xSlot.bidFloor) {
-			requestParams.bidFloor = xSlot.bidFloor;
-		}
 
 		var url = Network.buildUrl(baseUrl, ['bidRequest?']);
 

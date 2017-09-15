@@ -69,6 +69,14 @@
               "1": {
                   "dcn": "2c9d2b50015c5ce9db6aeeed8b9500d6",
                   "pos": "header"
+              },
+              "2": {
+                  "dcn": "d23c4234n",
+                  "pos": "footer"
+              },
+              "3": {
+                  "dcn": "32d434fdfdc44324",
+                  "pos": "interstitial"
               }
           },
           "mapping": {
