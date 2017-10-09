@@ -108,12 +108,12 @@ function AolHtb(configs) {
         var xSlot = returnParcel.xSlotRef;
 
         if (__isOneMobileRequest(xSlot)) {
-            __profile.statsId = 'AOLMOBILE';
+            __profile.statsId = 'onemobile';
 
             return __generateOneMobileRequest(xSlot);
         }
 
-        __profile.statsId = 'AOLDISPLAY';
+        __profile.statsId = 'onedisplay';
 
         return __generateOneDisplayRequest(xSlot);
     }

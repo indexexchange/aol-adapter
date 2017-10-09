@@ -195,7 +195,7 @@ describe('generateRequestObj()', function () {
         it('should set partner statsId correctly', function () {
             assertRequestsForPartnerConfig(oneDisplayConfigs.na);
 
-            expect(partnerProfile.statsId).to.equal('AOLDISPLAY');
+            expect(partnerProfile.statsId).to.equal('onedisplay');
         });
     });
 
@@ -238,7 +238,7 @@ describe('generateRequestObj()', function () {
         it('should set partner statsId correctly for', function () {
             assertRequestsForPartnerConfig(oneMobileConfigs.get);
 
-            expect(partnerProfile.statsId).to.equal('AOLMOBILE');
+            expect(partnerProfile.statsId).to.equal('onemobile');
         });
     })
 });
