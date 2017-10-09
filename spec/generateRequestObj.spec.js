@@ -87,7 +87,9 @@ describe('generateRequestObj()', function () {
 		returnParcels.forEach((item) => {
 		    requestObject = partnerInstance.__generateRequestObj([item]);
 
-		    assert(requestObject, item);
+		    if (assert) {
+                assert(requestObject, item);
+            }
         });
 	}
 
@@ -116,9 +118,7 @@ describe('generateRequestObj()', function () {
      * The url should contain all the necessary parameters for all of the request parcels
      * passed into the function.
      */
-    describe('should correctly build oneDisplay endpoint url',  () => {
-        var url, match;
-
+    describe('oneDisplay endpoint',  () => {
 		it('should return a correctly formated objects', function () {
 			assertRequestsForPartnerConfig(oneDisplayConfigs.na, (requestObject) => {
 				var result = validateRequestObject(requestObject);
@@ -147,35 +147,35 @@ describe('generateRequestObj()', function () {
 
         it('should correctly set CMD request paramater', function () {
 			assertRequestsForPartnerConfig(oneDisplayConfigs.na, ({url}) => {
-				match = url.match(/;cmd=(.*?);/);
+				var match = url.match(/;cmd=(.*?);/);
 				expect(match[1], 'cmd is incorrect or not present').to.equal('bid');
 			});
         });
 
         it('should correctly set CORS request paramater', function () {
 			assertRequestsForPartnerConfig(oneDisplayConfigs.na, ({url}) => {
-				match = url.match(/;cors=(.*?);/);
+                var match = url.match(/;cors=(.*?);/);
 				expect(match[1], 'CORS is incorrect or not present').to.equal('yes');
 			});
         });
 
         it('should correctly set V request paramater', function () {
 			assertRequestsForPartnerConfig(oneDisplayConfigs.na, ({url}) => {
-				match = url.match(/;v=(.*?);/);
+                var match = url.match(/;v=(.*?);/);
 				expect(match[1], "V is incorrect or not present").to.equal('2');
 			});
         });
 
         it('should correctly set MISC request paramater', function () {
 			assertRequestsForPartnerConfig(oneDisplayConfigs.na, ({url}) => {
-				match = url.match(/;misc=(.*?);/);
+                var match = url.match(/;misc=(.*?);/);
 				expect(match[1], 'V is incorrect or not present').to.be.not.null;
 			});
         });
 
         it('should correctly set unique callback request parameter for each request', function () {
 			assertRequestsForPartnerConfig(oneDisplayConfigs.na, ({url}) => {
-				match = url.match(/;callback=(.*?);/);
+                var match = url.match(/;callback=(.*?);/);
 				expect(match[1], 'callback function is incorrect').to.equal('window.headertag.' + partnerProfile.namespace + '.adResponseCallbacks.' + requestObject.callbackId);
 			});
         });
@@ -191,9 +191,15 @@ describe('generateRequestObj()', function () {
 				expect(url.match(requestStub.xSlotRef.placementId).length, "placementId is incorrect").to.equal(1);
 			});
         });
+
+        it('should set partner statsId correctly', function () {
+            assertRequestsForPartnerConfig(oneDisplayConfigs.na);
+
+            expect(partnerProfile.statsId).to.equal('AOLDISPLAY');
+        });
     });
 
-    describe('should correctly build oneMobile endpoint url', () => {
+    describe('oneMobile endpoint', () => {
         it('should return a correctly formated objects', function () {
             assertRequestsForPartnerConfig(oneDisplayConfigs.na, (requestObject) => {
                 var result = validateRequestObject(requestObject);
@@ -227,6 +233,12 @@ describe('generateRequestObj()', function () {
                 var match = url.match(/&pos=(.*?)(&|$)/);
                 expect(match[1], 'pos is incorrect or not present').to.equal(requestStub.xSlotRef.pos);
             });
+        });
+
+        it('should set partner statsId correctly for', function () {
+            assertRequestsForPartnerConfig(oneMobileConfigs.get);
+
+            expect(partnerProfile.statsId).to.equal('AOLMOBILE');
         });
     })
 });
