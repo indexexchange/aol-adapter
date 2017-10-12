@@ -156,7 +156,8 @@ function AolHtb(configs) {
     }
 
 	function __generateOneMobileRequest(xSlot) {
-		var baseUrl = Browser.getProtocol() + endpointsUrls.oneMobile.get;
+        var protocol = Browser.getProtocol();
+		var baseUrl = protocol + endpointsUrls.oneMobile.get;
 		var requestId = '_' + System.generateUniqueId();
 
 		var requestParams = {
@@ -164,6 +165,10 @@ function AolHtb(configs) {
 			dcn: xSlot.dcn,
             pos: xSlot.pos
 		};
+
+		if (protocol === 'https://') {
+            requestParams.secure = 1;
+        }
 
 		var url = Network.buildUrl(baseUrl, ['bidRequest?']);
 
