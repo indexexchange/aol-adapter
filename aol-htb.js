@@ -116,28 +116,28 @@ function AolHtb(configs) {
         return __generateOneDisplayRequest(xSlot);
     }
 
-	function __generateOneDisplayRequest(xSlot) {
-		var baseUrl = Browser.getProtocol() + endpointsUrls.oneDisplay[configs.region] + '/pubapi/3.0/' + configs.networkId;
-		var requestId = '_' + System.generateUniqueId();
+    function __generateOneDisplayRequest(xSlot) {
+        var baseUrl = Browser.getProtocol() + endpointsUrls.oneDisplay[configs.region] + '/pubapi/3.0/' + configs.networkId;
+        var requestId = '_' + System.generateUniqueId();
 
         /* sizeid & pageid */
-		var sizeId = xSlot.sizeId || '-1';
-		var pageId = xSlot.pageId || '0';
+        var sizeId = xSlot.sizeId || '-1';
+        var pageId = xSlot.pageId || '0';
 
         /* request params */
-		var requestParams = {
-			cmd: 'bid',
-			cors: 'yes',
-			v: '2',
-			misc: System.now(),
-			callback: 'window.' + SpaceCamp.NAMESPACE + '.' + __profile.namespace + '.adResponseCallbacks.' + requestId
-		};
+        var requestParams = {
+            cmd: 'bid',
+            cors: 'yes',
+            v: '2',
+            misc: System.now(),
+            callback: 'window.' + SpaceCamp.NAMESPACE + '.' + __profile.namespace + '.adResponseCallbacks.' + requestId
+        };
 
-		if (xSlot.bidFloor) {
-			requestParams.bidFloor = xSlot.bidFloor;
-		}
+        if (xSlot.bidFloor) {
+            requestParams.bidFloor = xSlot.bidFloor;
+        }
 
-		var url = Network.buildUrl(baseUrl, [xSlot.placementId, pageId, sizeId, 'ADTECH;']);
+        var url = Network.buildUrl(baseUrl, [xSlot.placementId, pageId, sizeId, 'ADTECH;']);
 
         /* build url paramters */
         for (var parameter in requestParams) {
@@ -147,39 +147,39 @@ function AolHtb(configs) {
             url += parameter + '=' + requestParams[parameter] + ';';
         }
 
-		return {
-		    url: url,
-			callbackId: requestId
-		};
+        return {
+            url: url,
+            callbackId: requestId
+        };
     }
 
-	function __generateOneMobileRequest(xSlot) {
+    function __generateOneMobileRequest(xSlot) {
         var protocol = Browser.getProtocol();
-		var baseUrl = protocol + endpointsUrls.oneMobile.get;
-		var requestId = '_' + System.generateUniqueId();
+        var baseUrl = protocol + endpointsUrls.oneMobile.get;
+        var requestId = '_' + System.generateUniqueId();
 
-		var requestParams = {
-			cmd: 'bid',
-			dcn: xSlot.dcn,
+        var requestParams = {
+            cmd: 'bid',
+            dcn: xSlot.dcn,
             pos: xSlot.pos
-		};
+        };
 
-		if (protocol === 'https:') {
+        if (protocol === 'https:') {
             requestParams.secure = 1;
         }
 
-		var url = Network.buildUrl(baseUrl, ['bidRequest?']);
+        var url = Network.buildUrl(baseUrl, ['bidRequest?']);
 
-		for (var parameter in requestParams) {
-			if (!requestParams.hasOwnProperty(parameter)) {
-				continue;
-			}
-			url += '&' + parameter + '=' + requestParams[parameter];
-		}
+        for (var parameter in requestParams) {
+            if (!requestParams.hasOwnProperty(parameter)) {
+                continue;
+            }
+            url += '&' + parameter + '=' + requestParams[parameter];
+        }
 
-		return {
-			url: url,
-			callbackId: requestId
+        return {
+            url: url,
+            callbackId: requestId
 		};
 	}
 
