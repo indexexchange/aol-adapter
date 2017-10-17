@@ -29,7 +29,7 @@ var partnerValidator = function (configs) {
         asia: 2
     };
 
-    var result = Inspector.validate({
+    var aolDisplayConfig = Inspector.validate({
         type: 'object',
         properties: {
             region: {
@@ -69,11 +69,34 @@ var partnerValidator = function (configs) {
         }
     }, configs);
 
-    if (!result.valid) {
-        return result.format();
+    var aolMobileConfig = Inspector.validate({
+        type: 'object',
+        properties: {
+            xSlots: {
+                type: 'object',
+                properties: {
+                    '*': {
+                        type: 'object',
+                        dcn: {
+                            type: ['string'],
+                            minLength: 1
+                        },
+                        pos: {
+                            type: ['string'],
+                            minLength: 1
+                        }
+                    }
+                }
+            }
+        }
+    }, configs);
+
+    if (aolDisplayConfig.valid || aolMobileConfig.valid) {
+        return null;
     }
 
-    return null;
+    return 'AOL config: ' + aolDisplayConfig.format() + '; AOLM config:' + aolMobileConfig.format();
+
 };
 
 module.exports = partnerValidator;
