@@ -10,16 +10,16 @@ var libraryStubData = {
     },
     'browser.js': {
         getProtocol: function () {
-            return 'http://';
+            return 'http:';
         },
         getReferrer: function () {
-            return 'localhost';
+            return 'http://localhost';
         },
         getPageUrl: function () {
             return 'localhost';
         },
         getUserAgent: function () {
-            return 'desktop';
+            return 'Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:2.2) Gecko/20110201';
         },
         getLanguage: function () {
             return 'en-US';
@@ -112,7 +112,7 @@ var libraryStubData = {
     },
     'system.js': {
         generateUniqueId: function () {
-            return '_' + Math.random().toString(36).substr(2, 9);
+            return Math.random().toString(36).substr(2, 9);
         },
         documentWrite: function (doc, adm) {
             return adm;
