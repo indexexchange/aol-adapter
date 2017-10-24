@@ -36,9 +36,7 @@ function generateReturnParcels(profile, partnerConfig) {
                 returnParcels.push({
                     partnerId: profile.partnerId,
                     htSlot: {
-                        getId: function () {
-                            return htSlotName
-                        }
+                        id: htSlotName
                     },
                     ref: "",
                     xSlotRef: partnerConfig.xSlots[xSlotName],
@@ -65,6 +63,7 @@ describe('generateRequestObj()', function () {
     var partnerModule = proxyquire('../aol-htb.js', libraryStubData);
     var oneDisplayConfigs = require('./support/mockPartnerConfig.json').oneDisplay;
     var oneMobileConfigs = require('./support/mockPartnerConfig.json').oneMobile;
+    var combinedConfigs = require('./support/mockPartnerConfig.json').combined;
     var expect = require('chai').expect;
     /* -------------------------------------------------------------------- */
 
@@ -240,5 +239,18 @@ describe('generateRequestObj()', function () {
 
             expect(partnerProfile.statsId).to.equal('AOLM');
         });
-    })
+    });
+
+    describe('combined slots configuration  ', () => {
+        it('should resolve endpoints correctly for different slots', function () {
+            assertRequestsForPartnerConfig(combinedConfigs, ({url}, {htSlot}) => {
+                if (htSlot.id === 'mobile') {
+                    expect(url.match('hb.nexage.com', 'url is incorrect').length).to.equal(1);
+                } else {
+                    expect(url.match('adserver-us.adtech.advertising.com', 'url is incorrect').length).to.equal(1);
+                }
+
+            })
+        });
+    });
 });
