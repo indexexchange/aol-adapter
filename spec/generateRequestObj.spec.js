@@ -215,7 +215,7 @@ describe('generateRequestObj()', function () {
 
         it('should correctly set CMD request paramater', function () {
             assertRequestsForPartnerConfig(oneMobileConfigs.get, ({url}) => {
-                var match = url.match(/&cmd=(.*?)(&|$)/);
+                var match = url.match(/cmd=(.*?)(&|$)/);
                 expect(match[1], 'cmd is incorrect or not present').to.equal('bid');
             });
         });

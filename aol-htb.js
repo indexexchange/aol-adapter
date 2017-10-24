@@ -159,7 +159,6 @@ function AolHtb(configs) {
         var requestId = '_' + System.generateUniqueId();
 
         var requestParams = {
-            cmd: 'bid',
             dcn: xSlot.dcn,
             pos: xSlot.pos
         };
@@ -168,7 +167,7 @@ function AolHtb(configs) {
             requestParams.secure = 1;
         }
 
-        var url = Network.buildUrl(baseUrl, ['bidRequest?']);
+        var url = Network.buildUrl(baseUrl, ['bidRequest?cmd=bid']);
 
         for (var parameter in requestParams) {
             if (!requestParams.hasOwnProperty(parameter)) {
