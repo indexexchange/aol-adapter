@@ -29,7 +29,7 @@ var partnerValidator = function (configs) {
         asia: 2
     };
 
-    var aolDisplayConfig = Inspector.validate({
+    var result = Inspector.validate({
         type: 'object',
         properties: {
             region: {
@@ -49,19 +49,38 @@ var partnerValidator = function (configs) {
                 properties: {
                     '*': {
                         type: 'object',
-                        placementId: {
-                            type: ['string'],
-                            minLength: 1
+                        exec: function(schema, post){
+                            if (!((post.hasOwnProperty('dcn') && post.hasOwnProperty('pos')) || post.hasOwnProperty('placementId'))){
+                                this.report("xSlots must have either dcn and pos, or placementId");
+                            }
+                            return post;
                         },
-                        sizeId: {
-                            optional: true,
-                            type: ['string'],
-                            minLength: 1
-                        },
-                        pageId: {
-                            optional: true,
-                            type: ['string'],
-                            minLength: 1
+                        properties: {
+                            placementId: {
+                                optional: true,
+                                type: ['string'],
+                                minLength: 1
+                            },
+                            dcn: {
+                                optional: true,
+                                type: ['string'],
+                                minLength: 1
+                            },
+                            pos: {
+                                optional: true,
+                                type: ['string'],
+                                minLength: 1
+                            },
+                            sizeId: {
+                                optional: true,
+                                type: ['string'],
+                                minLength: 1
+                            },
+                            pageId: {
+                                optional: true,
+                                type: ['string'],
+                                minLength: 1
+                            }
                         }
                     }
                 }
@@ -69,34 +88,12 @@ var partnerValidator = function (configs) {
         }
     }, configs);
 
-    var aolMobileConfig = Inspector.validate({
-        type: 'object',
-        properties: {
-            xSlots: {
-                type: 'object',
-                properties: {
-                    '*': {
-                        type: 'object',
-                        dcn: {
-                            type: ['string'],
-                            minLength: 1
-                        },
-                        pos: {
-                            type: ['string'],
-                            minLength: 1
-                        }
-                    }
-                }
-            }
-        }
-    }, configs);
 
-    if (aolDisplayConfig.valid || aolMobileConfig.valid) {
-        return null;
+    if (!result.valid) {
+        return result.format();
     }
 
-    return 'AOL config: ' + aolDisplayConfig.format() + '; AOLM config:' + aolMobileConfig.format();
-
+    return null;
 };
 
 module.exports = partnerValidator;
