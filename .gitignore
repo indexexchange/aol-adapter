@@ -1,0 +1,14 @@
+# Project generated files #
+###########################
+coverage/
+docs/
+node_modules/
+localdata.json
+
+# IDE generated files #
+#######################
+.project
+.settings
+.idea/
+.node-persist
+.vscode

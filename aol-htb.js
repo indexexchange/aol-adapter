@@ -68,18 +68,26 @@ function AolHtb(configs) {
     var __profile;
 
     /**
-     * Base url for bid requests.
-     *
-     * @private {object}
-     */
-    var __baseUrl;
-
-    /**
      * Instance of BidTransformer for transforming bids.
      *
      * @private {object}
      */
     var __bidTransformers;
+
+    /**
+     * Endpoints URLS
+     * @type {{eu: string, na: string, asia: string}}
+     */
+    var endpointsUrls = {
+        oneDisplay: {
+            eu: '//adserver-eu.adtech.advertising.com',
+            na: '//adserver-us.adtech.advertising.com',
+            asia: '//adserver-as.adtech.advertising.com'
+        },
+        oneMobile: {
+            get: '//hb.nexage.com'
+        }
+    };
 
     /* =====================================
      * Functions
@@ -96,12 +104,20 @@ function AolHtb(configs) {
      * @return {string}
      */
     function __generateRequestObj(returnParcels) {
-
-        /* MRA partners receive only one parcel in the array. */
         var returnParcel = returnParcels[0];
         var xSlot = returnParcel.xSlotRef;
 
-        /* generate a unique request identifier for storing request-specific information */
+        if (__isOneMobileRequest(xSlot)) {
+            __profile.statsId = 'AOLM';
+
+            return __generateOneMobileRequest(xSlot);
+        }
+
+        return __generateOneDisplayRequest(xSlot);
+    }
+
+    function __generateOneDisplayRequest(xSlot) {
+        var baseUrl = Browser.getProtocol() + endpointsUrls.oneDisplay[configs.region] + '/pubapi/3.0/' + configs.networkId;
         var requestId = '_' + System.generateUniqueId();
 
         /* sizeid & pageid */
@@ -113,15 +129,14 @@ function AolHtb(configs) {
             cmd: 'bid',
             cors: 'yes',
             v: '2',
-            misc: System.now(),
-            callback: 'window.' + SpaceCamp.NAMESPACE + '.' + __profile.namespace + '.adResponseCallbacks.' + requestId
+            misc: System.now()
         };
 
         if (xSlot.bidFloor) {
             requestParams.bidFloor = xSlot.bidFloor;
         }
 
-        var url = Network.buildUrl(__baseUrl, [xSlot.placementId, pageId, sizeId, 'ADTECH;']);
+        var url = Network.buildUrl(baseUrl, [xSlot.placementId, pageId, sizeId, 'ADTECH;']);
 
         /* build url paramters */
         for (var parameter in requestParams) {
@@ -136,6 +151,39 @@ function AolHtb(configs) {
             callbackId: requestId
         };
     }
+
+    function __generateOneMobileRequest(xSlot) {
+        var protocol = Browser.getProtocol();
+        var baseUrl = protocol + endpointsUrls.oneMobile.get;
+        var requestId = '_' + System.generateUniqueId();
+
+        var requestParams = {
+            dcn: xSlot.dcn,
+            pos: xSlot.pos
+        };
+
+        if (protocol === 'https:') {
+            requestParams.secure = 1;
+        }
+
+        var url = Network.buildUrl(baseUrl, ['bidRequest?cmd=bid']);
+
+        for (var parameter in requestParams) {
+            if (!requestParams.hasOwnProperty(parameter)) {
+                continue;
+            }
+            url += '&' + parameter + '=' + requestParams[parameter];
+        }
+
+        return {
+            url: url,
+            callbackId: requestId
+		};
+	}
+
+	function __isOneMobileRequest(xSlot) {
+        return xSlot.dcn && xSlot.pos;
+	}
 
     /* Helpers
      * ---------------------------------- */
@@ -289,7 +337,7 @@ function AolHtb(configs) {
                 id: 'ix_aol_id'
             },
             lineItemType: Constants.LineItemTypes.ID_AND_SIZE,
-            callbackType: Partner.CallbackTypes.CALLBACK_NAME,
+            callbackType: Partner.CallbackTypes.NONE,
             architecture: Partner.Architectures.MRA,
             requestType: Partner.RequestTypes.ANY
         };
@@ -349,16 +397,6 @@ function AolHtb(configs) {
         __bidTransformers.price = BidTransformer(bidTransformerConfigs.price);
         //? }
 
-        /* base url by region */
-        var endPointByRegion = {
-            eu: '//adserver-eu.adtech.advertising.com',
-            na: '//adserver-us.adtech.advertising.com',
-            asia: '//adserver-as.adtech.advertising.com'
-        };
-
-        /* build base bid request url */
-        __baseUrl = Browser.getProtocol() + endPointByRegion[configs.region] + '/pubapi/3.0/' + configs.networkId;
-
         __baseClass = Partner(__profile, configs, null, {
             parseResponse: __parseResponse,
             generateRequestObj: __generateRequestObj
@@ -386,7 +424,6 @@ function AolHtb(configs) {
 
         //? if (TEST) {
         __profile: __profile,
-        __baseUrl: __baseUrl,
         //? }
 
         /* Functions

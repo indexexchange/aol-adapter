@@ -49,25 +49,45 @@ var partnerValidator = function (configs) {
                 properties: {
                     '*': {
                         type: 'object',
-                        placementId: {
-                            type: ['string'],
-                            minLength: 1
+                        exec: function(schema, post){
+                            if (!((post.hasOwnProperty('dcn') && post.hasOwnProperty('pos')) || post.hasOwnProperty('placementId'))){
+                                this.report("xSlots must have either dcn and pos, or placementId");
+                            }
+                            return post;
                         },
-                        sizeId: {
-                            optional: true,
-                            type: ['string'],
-                            minLength: 1
-                        },
-                        pageId: {
-                            optional: true,
-                            type: ['string'],
-                            minLength: 1
+                        properties: {
+                            placementId: {
+                                optional: true,
+                                type: ['string'],
+                                minLength: 1
+                            },
+                            dcn: {
+                                optional: true,
+                                type: ['string'],
+                                minLength: 1
+                            },
+                            pos: {
+                                optional: true,
+                                type: ['string'],
+                                minLength: 1
+                            },
+                            sizeId: {
+                                optional: true,
+                                type: ['string'],
+                                minLength: 1
+                            },
+                            pageId: {
+                                optional: true,
+                                type: ['string'],
+                                minLength: 1
+                            }
                         }
                     }
                 }
             }
         }
     }, configs);
+
 
     if (!result.valid) {
         return result.format();
