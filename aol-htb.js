@@ -129,8 +129,7 @@ function AolHtb(configs) {
             cmd: 'bid',
             cors: 'yes',
             v: '2',
-            misc: System.now(),
-            callback: 'window.' + SpaceCamp.NAMESPACE + '.' + __profile.namespace + '.adResponseCallbacks.' + requestId
+            misc: System.now()
         };
 
         if (xSlot.bidFloor) {
@@ -338,7 +337,7 @@ function AolHtb(configs) {
                 id: 'ix_aol_id'
             },
             lineItemType: Constants.LineItemTypes.ID_AND_SIZE,
-            callbackType: Partner.CallbackTypes.CALLBACK_NAME,
+            callbackType: Partner.CallbackTypes.NONE,
             architecture: Partner.Architectures.MRA,
             requestType: Partner.RequestTypes.ANY
         };

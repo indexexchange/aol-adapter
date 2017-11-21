@@ -172,13 +172,6 @@ describe('generateRequestObj()', function () {
 			});
         });
 
-        it('should correctly set unique callback request parameter for each request', function () {
-			assertRequestsForPartnerConfig(oneDisplayConfigs.na, ({url}) => {
-                var match = url.match(/;callback=(.*?);/);
-				expect(match[1], 'callback function is incorrect').to.equal('window.headertag.' + partnerProfile.namespace + '.adResponseCallbacks.' + requestObject.callbackId);
-			});
-        });
-
         it('should correctly set networkId', function () {
 			assertRequestsForPartnerConfig(oneDisplayConfigs.na, ({url}) => {
 				expect(url.match('9959.1').length, "networkId is incorrect").to.equal(1);
