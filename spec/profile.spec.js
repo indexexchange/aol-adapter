@@ -34,9 +34,9 @@ describe('Partner Profile', function () {
     var expect = require('chai').expect;
     /* -------------------------------------------------------------------- */
 
-    /* Instatiate your partner module */
+    /* Instantiate your partner module */
     var partnerModule = partnerModule(partnerConfig);
-    var partnerProfile = partnerModule.__profile;
+    var partnerProfile = partnerModule.profile;
 
     /* partner module profile tests */
     var profile = partnerProfile;
@@ -57,7 +57,7 @@ describe('Partner Profile', function () {
                 },
                 statsId: {
                     type: 'string',
-                    ne: 'PNH'
+                    eq: 'AOL'
                 },
                 version: {
                     type: 'string'
@@ -102,7 +102,7 @@ describe('Partner Profile', function () {
                                 if (targetingSplit[0] !== 'ix' ||
                                     targetingSplit[1] !== profile.statsId.toLowerCase() ||
                                     targetingSplit[2] !== 'id') {
-                                    this.report('id tageting key should be of the format ix_{statsId}_id')
+                                    this.report('id tageting key should be of the format ix_{AOL}_id')
                                 }
                             }
                         },
@@ -113,8 +113,8 @@ describe('Partner Profile', function () {
 
                                 if (targetingSplit[0] !== 'ix' ||
                                     targetingSplit[1] !== profile.statsId.toLowerCase() ||
-                                    targetingSplit[2] !== 'om') {
-                                    this.report('om tageting key should be of the format ix_{statsId}_om')
+                                    targetingSplit[2] !== 'cpm') {
+                                    this.report('om tageting key should be of the format ix_AOL_cpm')
                                 }
                             }
                         },
@@ -125,10 +125,31 @@ describe('Partner Profile', function () {
 
                                 if (targetingSplit[0] !== 'ix' ||
                                     targetingSplit[1] !== profile.statsId.toLowerCase() ||
-                                    targetingSplit[2] !== 'pm') {
-                                    this.report('pm tageting key should be of the format ix_{statsId}_pm')
+                                    targetingSplit[2] !== 'cpm') {
+                                    this.report('pm tageting key should be of the format ix_AOL_cpm')
                                 }
                             }
+                        },
+                        pmid: {
+                            type: 'string',
+                            exec: function (schema, post) {
+                                var targetingSplit = post.split('_');
+
+                                if (targetingSplit[0] !== 'ix' ||
+                                    targetingSplit[1] !== profile.statsId.toLowerCase() ||
+                                    targetingSplit[2] !== 'dealid') {
+                                    this.report('pmid tageting key should be of the format ix_AOL_dealid')
+                                }
+                            }
+                        }
+                    }
+                },
+                bidUnitInCents: {
+                    type: 'number',
+                    gt: 0,
+                    exec: function (schema, post) {
+                        if ((post > 1 && post % 10 !== 0) || (post < 1 && !/^0\.0*1$/.test(post.toString()))) {
+                            this.report('bidUnitInCents should be a multiple of 10')
                         }
                     }
                 },
