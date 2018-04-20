@@ -11,7 +11,6 @@ function OpenRtb() {
         if (!(this instanceof BidResponse)) {
             return new BidResponse(bidResponse);
         }
-
         this.__bidResponse = bidResponse;
     }
 

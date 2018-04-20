@@ -1,29 +1,34 @@
 var partnerStub = require('./partnerStub.js');
 var openRtbStub = require('./openRtbStub.js');
+
+/* Instantiate mock browser objects */
+var MockBrowser = require('mock-browser').mocks.MockBrowser;
+var mock = new MockBrowser();
+
 var libraryStubData = {
-    'bid-transformer.js': function (config) {
-        return {
-            apply: function (price) {
-                return price;
-            }
-        }
-    },
     'browser.js': {
         getProtocol: function () {
-            return 'http://';
+            return 'http:';
         },
         getReferrer: function () {
             return 'localhost';
         },
-        getPageUrl: function () {
-            return 'localhost';
-        },
         getUserAgent: function () {
-            return 'desktop';
+            return 'Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:2.2) Gecko/20110201';
         },
         getLanguage: function () {
             return 'en-US';
-        }
+        },
+        getScreenWidth: function () {
+            return 1024;
+        },
+        getScreenHeight: function () {
+            return 768;
+        },
+        getPageUrl: function () {
+            return 'http://www.indexexchange.com';
+        },
+        topWindow: mock.getWindow()
     },
     'classify.js': {
         derive: function (baseClass, derivedClass) {
@@ -132,6 +137,9 @@ var libraryStubData = {
     },
     'scribe.js': {
         info: function () {
+            return;
+        },
+        error: function () {
             return;
         },
     },

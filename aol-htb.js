@@ -1,5 +1,5 @@
 /**
- * @author:    Index Exchange <adapter-certification-eng@indexexchange.com>
+ * @author:    Partner
  * @license:   UNLICENSED
  *
  * @copyright: Copyright (c) 2017 by Index Exchange. All rights reserved.
@@ -16,7 +16,6 @@
 // Dependencies ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-var BidTransformer = require('bid-transformer.js');
 var Browser = require('browser.js');
 var Classify = require('classify.js');
 var Constants = require('constants.js');
@@ -27,6 +26,7 @@ var SpaceCamp = require('space-camp.js');
 var System = require('system.js');
 var Network = require('network.js');
 var Whoopsie = require('whoopsie.js');
+
 var EventsService;
 var RenderService;
 
@@ -74,13 +74,6 @@ function AolHtb(configs) {
      */
     var __baseUrl;
 
-    /**
-     * Instance of BidTransformer for transforming bids.
-     *
-     * @private {object}
-     */
-    var __bidTransformers;
-
     /* =====================================
      * Functions
      * ---------------------------------- */
@@ -96,19 +89,18 @@ function AolHtb(configs) {
      * @return {string}
      */
     function __generateRequestObj(returnParcels) {
-
         /* MRA partners receive only one parcel in the array. */
         var returnParcel = returnParcels[0];
         var xSlot = returnParcel.xSlotRef;
 
-        /* generate a unique request identifier for storing request-specific information */
+        /* Generate a unique request identifier for storing request-specific information */
         var requestId = '_' + System.generateUniqueId();
 
-        /* sizeid & pageid */
+        /* `sizeid` & `pageid` */
         var sizeId = xSlot.sizeId || '-1';
         var pageId = xSlot.pageId || '0';
 
-        /* request params */
+        /* Request params */
         var requestParams = {
             cmd: 'bid',
             cors: 'yes',
@@ -123,7 +115,7 @@ function AolHtb(configs) {
 
         var url = Network.buildUrl(__baseUrl, [xSlot.placementId, pageId, sizeId, 'ADTECH;']);
 
-        /* build url paramters */
+        /* Build url paramters */
         for (var parameter in requestParams) {
             if (!requestParams.hasOwnProperty(parameter)) {
                 continue;
@@ -141,107 +133,113 @@ function AolHtb(configs) {
      * ---------------------------------- */
 
     /**
-     * This function will render the ad given.
-     * @param  {Object} doc The document of the iframe where the ad will go.
-     * @param  {string} adm The ad code that came with the original demand.
+     * This function will render the AOL pixel.
      * @param  {string} pixel The tracking pixel url.
      */
-    function __render(doc, adm, pixel) {
+    function __renderPixel(pixel) {
         if (pixel) {
             var iframe = Browser.createHiddenIFrame();
             System.documentWrite(iframe.contentDocument, pixel);
         }
-        System.documentWrite(doc, adm);
     }
 
     /* Parse adResponse, put demand into outParcels.
      * AOL response contains a single result object.
      */
     function __parseResponse(sessionId, responseObj, returnParcels) {
-
         /* MRA partners receive only one parcel in the array. */
         var returnParcel = returnParcels[0];
 
-        /* header stats information */
+        /* Header stats information */
         var headerStatsInfo = {
             sessionId: sessionId,
             statsId: __profile.statsId,
             htSlotId: returnParcel.htSlot.getId(),
+            requestId: returnParcel.requestId,
             xSlotNames: [returnParcel.xSlotName]
         };
 
         var ortbResponse = OpenRtb.BidResponse(responseObj);
 
-        /* there is only one bid because mra */
+        /* There is only one bid because mra */
         var bid = ortbResponse.getBids()[0];
 
         if (bid && !bid.hasOwnProperty('nbr')) {
+            /* Bid response */
+            var bidPrice = bid.price;
+
+            if (Number(bidPrice) === 0) {
+                //? if (DEBUG) {
+                Scribe.info(__profile.partnerId + ' 0 cpm for { id: ' + returnParcel.xSlotRef.placementId + ' }.');
+                //? }
+
+                if (__profile.enabledAnalytics.requestTime) {
+                    EventsService.emit('hs_slot_pass', headerStatsInfo);
+                }
+
+                returnParcel.pass = true;
+
+                return;
+            }
+
             if (__profile.enabledAnalytics.requestTime) {
                 EventsService.emit('hs_slot_bid', headerStatsInfo);
             }
 
-            /* bid response */
-            var bidPrice = bid.price;
             var bidCreative = bid.adm;
             var bidSize = [Number(bid.w), Number(bid.h)];
-            var pixel = bid.ext.pixels;
+            var pixel;
+            var bidDealId = bid.hasOwnProperty('dealid') ? bid.dealid : null;
+
+            if (bid.ext && bid.ext.pixels) {
+                pixel = bid.ext.pixels;
+            }
 
             returnParcel.targetingType = 'slot';
             returnParcel.targeting = {};
             returnParcel.size = bidSize;
 
-            var sizeKey = Size.arrayToString(bidSize);
+            var targetingCpm = '';
 
             //? if(FEATURES.GPT_LINE_ITEMS) {
-            var targetingCpm = __bidTransformers.targeting.apply(bidPrice);
-            if (bid.hasOwnProperty('dealid')) { // dealid
-                returnParcel.targeting[__baseClass._configs.targetingKeys.pm] = [sizeKey + '_' + bid.dealid];
+            var sizeKey = Size.arrayToString(bidSize);
+            targetingCpm = __baseClass._bidTransformers.targeting.apply(bidPrice);
+
+            /* Deal ID */
+            if (bidDealId) {
+                returnParcel.targeting[__baseClass._configs.targetingKeys.pm] = [sizeKey + '_' + bidDealId];
             }
             returnParcel.targeting[__baseClass._configs.targetingKeys.om] = [sizeKey + '_' + targetingCpm];
             returnParcel.targeting[__baseClass._configs.targetingKeys.id] = [returnParcel.requestId];
-
-            if (__baseClass._configs.lineItemType === Constants.LineItemTypes.ID_AND_SIZE) {
-                RenderService.registerAdByIdAndSize(
-                    sessionId,
-                    __profile.partnerId,
-                    __render, [bidCreative, pixel],
-                    '',
-                    __profile.features.demandExpiry.enabled ? (__profile.features.demandExpiry.value + System.now()) : 0,
-                    returnParcel.requestId,
-                    returnParcel.size
-                );
-            } else if (__baseClass._configs.lineItemType === Constants.LineItemTypes.ID_AND_PRICE) {
-                RenderService.registerAdByIdAndPrice(
-                    sessionId,
-                    __profile.partnerId,
-                    __render, [bidCreative, pixel],
-                    '',
-                    __profile.features.demandExpiry.enabled ? (__profile.features.demandExpiry.value + System.now()) : 0,
-                    returnParcel.requestId,
-                    targetingCpm
-                );
-            }
             //? }
 
             //? if(FEATURES.RETURN_CREATIVE) {
             returnParcel.adm = bidCreative;
+            if (pixel) {
+                returnParcel.winNotice = __renderPixel.bind(null, pixel);
+            }
             //? }
 
             //? if(FEATURES.RETURN_PRICE) {
-            returnParcel.price = Number(__bidTransformers.price.apply(bidPrice));
+            returnParcel.price = Number(__baseClass._bidTransformers.price.apply(bidPrice));
             //? }
+
+            var pubKitAdId = RenderService.registerAd({
+                sessionId: sessionId,
+                partnerId: __profile.partnerId,
+                adm: bidCreative,
+                requestId: returnParcel.requestId,
+                size: returnParcel.size,
+                price: targetingCpm ? targetingCpm : undefined,
+                dealId: bidDealId ? bidDealId : undefined,
+                timeOfExpiry: __profile.features.demandExpiry.enabled ? (__profile.features.demandExpiry.value + System.now()) : 0,
+                auxFn: __renderPixel,
+                auxArgs: [pixel]
+            });
 
             //? if(FEATURES.INTERNAL_RENDER) {
-            var pubKitAdId = RenderService.registerAd(
-                sessionId,
-                __profile.partnerId,
-                __render, [bidCreative, pixel],
-                '',
-                __profile.features.demandExpiry.enabled ? (__profile.features.demandExpiry.value + System.now()) : 0
-            );
             returnParcel.targeting.pubKitAdId = pubKitAdId;
             //? }
-
         } else {
             //? if (DEBUG) {
             Scribe.info(__profile.partnerId + ' no bid response for { id: ' + returnParcel.xSlotRef.placementId + ' }.');
@@ -253,7 +251,6 @@ function AolHtb(configs) {
 
             returnParcel.pass = true;
         }
-
     }
 
     /* =====================================
@@ -268,7 +265,7 @@ function AolHtb(configs) {
             partnerId: 'AolHtb',
             namespace: 'AolHtb',
             statsId: 'AOL',
-            version: '2.0.0',
+            version: '2.1.2',
             targetingType: 'slot',
             enabledAnalytics: {
                 requestTime: true
@@ -288,6 +285,7 @@ function AolHtb(configs) {
                 pm: 'ix_aol_pm',
                 id: 'ix_aol_id'
             },
+            bidUnitInCents: 100,
             lineItemType: Constants.LineItemTypes.ID_AND_SIZE,
             callbackType: Partner.CallbackTypes.CALLBACK_NAME,
             architecture: Partner.Architectures.MRA,
@@ -302,67 +300,29 @@ function AolHtb(configs) {
         }
         //? }
 
-        // The default bid transformation for this partner. Adjust to match
-        // units the partner sends bids in and to match line item setup.
-        var bidTransformerConfigs = {
-            //? if(FEATURES.GPT_LINE_ITEMS) {
-            targeting: {
-                inputCentsMultiplier: 100,
-                outputCentsDivisor: 1,
-                outputPrecision: 0,
-                roundingType: 'FLOOR', // jshint ignore:line
-                floor: 0,
-                buckets: [{
-                    max: 2000,
-                    step: 5
-                }, {
-                    max: 5000,
-                    step: 100
-                }]
-            },
-            //? }
-            //? if(FEATURES.RETURN_PRICE) {
-            price: {
-                inputCentsMultiplier: 100,
-                outputCentsDivisor: 1,
-                outputPrecision: 0,
-                roundingType: 'NONE',
-            },
-            //? }
-        };
-
-        if (configs.bidTransformer) {
-            //? if(FEATURES.GPT_LINE_ITEMS) {
-            bidTransformerConfigs.targeting = configs.bidTransformer;
-            //? }
-            //? if(FEATURES.RETURN_PRICE) {
-            bidTransformerConfigs.price.inputCentsMultiplier = configs.bidTransformer.inputCentsMultiplier;
-            //? }
-        }
-
-        __bidTransformers = {};
-
-        //? if(FEATURES.GPT_LINE_ITEMS) {
-        __bidTransformers.targeting = BidTransformer(bidTransformerConfigs.targeting);
-        //? }
-        //? if(FEATURES.RETURN_PRICE) {
-        __bidTransformers.price = BidTransformer(bidTransformerConfigs.price);
-        //? }
-
-        /* base url by region */
+        /* Base url by region */
         var endPointByRegion = {
             eu: '//adserver-eu.adtech.advertising.com',
             na: '//adserver-us.adtech.advertising.com',
             asia: '//adserver-as.adtech.advertising.com'
         };
 
-        /* build base bid request url */
+        /* Build base bid request url */
         __baseUrl = Browser.getProtocol() + endPointByRegion[configs.region] + '/pubapi/3.0/' + configs.networkId;
 
         __baseClass = Partner(__profile, configs, null, {
             parseResponse: __parseResponse,
             generateRequestObj: __generateRequestObj
         });
+
+        //? if (DEBUG) {
+        /* If wrapper is already active, we might be instantiated late so need to add our callback
+           since the shell potentially missed its chance */
+        if (window[SpaceCamp.NAMESPACE]) {
+            window[SpaceCamp.NAMESPACE][__profile.namespace] = window[SpaceCamp.NAMESPACE][__profile.namespace] || {};
+            window[SpaceCamp.NAMESPACE][__profile.namespace].adResponseCallbacks = window[SpaceCamp.NAMESPACE][__profile.namespace].adResponseCallbacks;
+        }
+        //? }
     })();
 
     /* =====================================
