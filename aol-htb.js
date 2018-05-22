@@ -29,6 +29,7 @@ var Whoopsie = require('whoopsie.js');
 
 var EventsService;
 var RenderService;
+var ComplianceService;
 
 //? if (DEBUG) {
 var ConfigValidators = require('config-validators.js');
@@ -81,6 +82,18 @@ function AolHtb(configs) {
     /* Utilities
      * ---------------------------------- */
 
+    function __addGdprParams(params) {
+        var consentData = ComplianceService.gdpr.getConsent();
+
+        if (consentData && consentData.applies) {
+            params.gdpr = 1;
+
+            if (consentData.consentString) {
+                params.euconsent = consentData.consentString;
+            }
+        }
+    }
+
     /**
      * Generates the request URL to the endpoint for the xSlots in the given
      * returnParcels.
@@ -111,6 +124,10 @@ function AolHtb(configs) {
 
         if (xSlot.bidFloor) {
             requestParams.bidFloor = xSlot.bidFloor;
+        }
+
+        if (ComplianceService.isPrivacyEnabled()) {
+            __addGdprParams(requestParams);
         }
 
         var url = Network.buildUrl(__baseUrl, [xSlot.placementId, pageId, sizeId, 'ADTECH;']);
@@ -260,6 +277,7 @@ function AolHtb(configs) {
     (function __constructor() {
         EventsService = SpaceCamp.services.EventsService;
         RenderService = SpaceCamp.services.RenderService;
+        ComplianceService = SpaceCamp.services.ComplianceService;
 
         __profile = {
             partnerId: 'AolHtb',
