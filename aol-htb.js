@@ -163,7 +163,7 @@ function AolHtb(configs) {
     /* Parse adResponse, put demand into outParcels.
      * AOL response contains a single result object.
      */
-    function __parseResponse(sessionId, responseObj, returnParcels) {
+    function __parseResponse(sessionId, adResponse, returnParcels) {
         /* MRA partners receive only one parcel in the array. */
         var returnParcel = returnParcels[0];
 
@@ -176,7 +176,7 @@ function AolHtb(configs) {
             xSlotNames: [returnParcel.xSlotName]
         };
 
-        var ortbResponse = OpenRtb.BidResponse(responseObj);
+        var ortbResponse = OpenRtb.BidResponse(adResponse);
 
         /* There is only one bid because mra */
         var bid = ortbResponse.getBids()[0];
@@ -208,8 +208,8 @@ function AolHtb(configs) {
             var pixel;
             var bidDealId = bid.hasOwnProperty('dealid') ? bid.dealid : null;
 
-            if (bid.ext && bid.ext.pixels) {
-                pixel = bid.ext.pixels;
+            if (adResponse.hasOwnProperty('ext')) {
+                pixel = adResponse.ext.pixels || '';
             }
 
             returnParcel.targetingType = 'slot';
